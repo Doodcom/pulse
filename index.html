@@ -40,6 +40,14 @@
     #creature.shake { animation: shake 0.3s linear infinite; }
     body.paused #creature { animation-play-state: paused; }
     body.paused #stats { opacity: 0.5; }
+    #ring {
+      transform-origin: 50% 50%;
+      animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    body.paused #ring { animation-play-state: paused; }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-2px) rotate(-1deg); }
@@ -71,6 +79,9 @@
   <button id="close" title="Quit Pulse">✕</button>
 
   <svg id="creature" viewBox="0 0 100 100">
+    <circle id="ring" cx="50" cy="50" r="47" fill="none" stroke="#6b7280"
+            stroke-width="2.5" stroke-dasharray="5 9" stroke-linecap="round"
+            opacity="0.7" style="display: none" />
     <ellipse id="body" cx="50" cy="52" rx="40" ry="38" fill="#4ade80" />
     <rect id="brow-l" x="30" y="30" width="16" height="3.5" rx="1.75" fill="#111827" />
     <rect id="brow-r" x="54" y="30" width="16" height="3.5" rx="1.75" fill="#111827" />

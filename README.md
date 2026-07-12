@@ -10,7 +10,9 @@ progressively angrier as your rig heats up.
 | 70–82 °C | hot (orange, frowning) |
 | > 82 °C | critical (red, angry, shaking) |
 
-Breathing speed tracks CPU load. Blinks because it's alive.
+Breathing speed tracks CPU load. Blinks because it's alive. If your board
+exposes fan sensors, a dashed ring spins around the creature at a speed
+scaled to the fastest fan (no fan data — no ring).
 
 ## Run
 
@@ -32,6 +34,5 @@ Pause (puts the creature to sleep) and Quit.
 
 ## Ideas for later
 
-- Fan RPM ring around the creature
 - Sounds when it goes critical (it should complain)
 - Click-through mode (`setIgnoreMouseEvents`)

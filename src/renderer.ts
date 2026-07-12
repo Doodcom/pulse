@@ -69,8 +69,19 @@ function render(v: PulseVitals): void {
   document.getElementById("stat-load")!.textContent = fmt(v.cpuLoad * 100, "%");
   document.getElementById("stat-power")!.textContent = v.powerWatts ? fmt(v.powerWatts, "W") : "—";
 
-  const fan = v.fans[0];
-  document.getElementById("fanline")!.textContent = fan ? `${fan.label}: ${fan.rpm} rpm` : "";
+  // Fan ring: spins with the fastest fan, scaled down so it reads as motion
+  // rather than a blur (1200 rpm ≈ one visual revolution per 0.5 s).
+  const ring = document.getElementById("ring")!;
+  const maxRpm = v.fans.reduce((m, f) => Math.max(m, f.rpm), 0);
+  if (maxRpm > 0) {
+    ring.style.display = "";
+    ring.style.animationDuration = `${Math.min(8, 600 / maxRpm)}s`;
+  } else {
+    ring.style.display = "none";
+  }
+
+  document.getElementById("fanline")!.textContent =
+    v.fans.map((f) => `${f.label} ${f.rpm}rpm`).join(" · ");
 }
 
 pulse.onVitals(render);
