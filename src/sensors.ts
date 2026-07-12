@@ -22,6 +22,12 @@ export interface Vitals {
   powerWatts: number | null;
   /** CPU utilisation 0..1 since the previous poll. */
   cpuLoad: number;
+  /** RAM in use 0..1 (1 - MemAvailable/MemTotal). */
+  memUsed: number;
+  /** Network throughput (rx+tx, all interfaces except lo) in KB/s since the previous poll. */
+  netKBps: number;
+  /** Disk throughput (read+write, whole devices only) in KB/s since the previous poll. */
+  diskKBps: number;
   /**
    * Hottest CPU/GPU temperature — drives the creature's mood. Other chips
    * (NVMe controllers, WiFi) idle hot by design and would skew it.
@@ -96,6 +102,65 @@ async function readCpuLoad(): Promise<number> {
   return Math.min(1, Math.max(0, 1 - dIdle / dTotal));
 }
 
+async function readMemUsed(): Promise<number> {
+  try {
+    const data = await fs.readFile("/proc/meminfo", "utf8");
+    const total = Number(/MemTotal:\s+(\d+)/.exec(data)?.[1]);
+    const avail = Number(/MemAvailable:\s+(\d+)/.exec(data)?.[1]);
+    if (!total || !avail) return 0;
+    return Math.min(1, Math.max(0, 1 - avail / total));
+  } catch {
+    return 0;
+  }
+}
+
+let prevNetBytes = 0;
+let prevNetTime = 0;
+
+async function readNetKBps(): Promise<number> {
+  let total = 0;
+  try {
+    const data = await fs.readFile("/proc/net/dev", "utf8");
+    for (const line of data.split("\n").slice(2)) {
+      const f = line.trim().split(/[:\s]+/);
+      if (f.length < 10 || !f[0] || f[0] === "lo") continue;
+      total += Number(f[1]) + Number(f[9]); // rx_bytes + tx_bytes
+    }
+  } catch {
+    return 0;
+  }
+  const now = Date.now();
+  const dt = (now - prevNetTime) / 1000;
+  const rate = prevNetTime && dt > 0 ? (total - prevNetBytes) / 1024 / dt : 0;
+  prevNetBytes = total;
+  prevNetTime = now;
+  return Math.max(0, rate);
+}
+
+const WHOLE_DISK = /^(sd[a-z]+|vd[a-z]+|nvme\d+n\d+|mmcblk\d+)$/;
+let prevDiskBytes = 0;
+let prevDiskTime = 0;
+
+async function readDiskKBps(): Promise<number> {
+  let total = 0;
+  try {
+    const data = await fs.readFile("/proc/diskstats", "utf8");
+    for (const line of data.split("\n")) {
+      const f = line.trim().split(/\s+/);
+      if (f.length < 11 || !WHOLE_DISK.test(f[2])) continue;
+      total += (Number(f[5]) + Number(f[9])) * 512; // sectors read + written
+    }
+  } catch {
+    return 0;
+  }
+  const now = Date.now();
+  const dt = (now - prevDiskTime) / 1000;
+  const rate = prevDiskTime && dt > 0 ? (total - prevDiskBytes) / 1024 / dt : 0;
+  prevDiskBytes = total;
+  prevDiskTime = now;
+  return Math.max(0, rate);
+}
+
 export async function readVitals(): Promise<Vitals> {
   let dirs: string[] = [];
   try {
@@ -108,7 +173,12 @@ export async function readVitals(): Promise<Vitals> {
   const temps = chips.flatMap((c) => c.temps);
   const fans = chips.flatMap((c) => c.fans);
   const watts = chips.reduce((a, c) => a + c.watts, 0);
-  const cpuLoad = await readCpuLoad();
+  const [cpuLoad, memUsed, netKBps, diskKBps] = await Promise.all([
+    readCpuLoad(),
+    readMemUsed(),
+    readNetKBps(),
+    readDiskKBps(),
+  ]);
 
   const MOOD_CHIPS = ["k10temp", "coretemp", "zenpower", "amdgpu", "nvidia"];
   const moodTemps = temps.filter((t) => MOOD_CHIPS.includes(t.chip));
@@ -119,6 +189,9 @@ export async function readVitals(): Promise<Vitals> {
     fans,
     powerWatts: watts > 0 ? watts : null,
     cpuLoad,
+    memUsed,
+    netKBps,
+    diskKBps,
     hottest: moodSource.reduce((m, t) => Math.max(m, t.celsius), 0),
   };
 }

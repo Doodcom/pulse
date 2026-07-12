@@ -1,18 +1,40 @@
 {
   "name": "pulse",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Your PC's vitals as a creature that gets angry when your rig runs hot",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
     "start": "npm run build && electron .",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "dist": "npm run build && electron-builder --linux AppImage"
   },
-  "author": "Doodcom",
+  "author": "Doodcom <a.munro87@icloud.com>",
   "license": "MIT",
+  "build": {
+    "appId": "com.doodcom.pulse",
+    "productName": "Pulse",
+    "files": [
+      "dist/**/*",
+      "index.html",
+      "assets/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "assets/icon.png",
+      "category": "System",
+      "synopsis": "Your PC's vitals as a desktop creature"
+    }
+  },
   "devDependencies": {
     "@types/node": "^26.1.1",
     "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
     "typescript": "^7.0.2"
   }
 }

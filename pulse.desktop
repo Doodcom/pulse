@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Pulse
+Comment=Your PC's vitals as a creature that gets angry when your rig runs hot
+Exec=/home/doodcom/Documents/Projects/Pulse/node_modules/.bin/electron /home/doodcom/Documents/Projects/Pulse
+Icon=/home/doodcom/Documents/Projects/Pulse/assets/icon.png
+Terminal=false
+Categories=System;Monitor;
+StartupWMClass=Pulse

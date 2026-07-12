@@ -15,7 +15,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 8px;
+      padding: 40px 8px 8px; /* top padding reserves room for the speech bubble */
     }
     #close {
       -webkit-app-region: no-drag;
@@ -28,7 +28,38 @@
       transition: opacity 0.2s;
     }
     body:hover #close { opacity: 1; }
+
+    #bubble {
+      position: fixed;
+      top: 6px; left: 50%;
+      transform: translateX(-50%);
+      max-width: 220px;
+      background: #f9fafb;
+      color: #111827;
+      font-size: 11px;
+      line-height: 1.35;
+      padding: 6px 10px;
+      border-radius: 10px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+      z-index: 5;
+    }
+    #bubble.visible { opacity: 1; }
+    #bubble::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: -5px;
+      margin-left: -5px;
+      border: 5px solid transparent;
+      border-top-color: #f9fafb;
+      border-bottom: 0;
+    }
+
     #creature {
+      -webkit-app-region: no-drag; /* clickable for pats */
+      cursor: pointer;
       width: 150px; height: 150px;
       --breath: 4s;
       animation: breathe var(--breath) ease-in-out infinite;
@@ -38,23 +69,58 @@
       50% { transform: scale(1.06); }
     }
     #creature.shake { animation: shake 0.3s linear infinite; }
-    body.paused #creature { animation-play-state: paused; }
-    body.paused #stats { opacity: 0.5; }
-    #ring {
-      transform-origin: 50% 50%;
-      animation: spin 2s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    body.paused #ring { animation-play-state: paused; }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-2px) rotate(-1deg); }
       75% { transform: translateX(2px) rotate(1deg); }
     }
+    body.paused #creature,
+    body.paused #creature * { animation-play-state: paused; }
+    body.paused #stats { opacity: 0.5; }
+
     #body { transition: fill 1s; }
     #mouth { transition: d 0.5s; }
+
+    #ring {
+      transform-origin: 50% 50%;
+      animation: spin 2s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #aura { animation: aura-pulse 3s ease-in-out infinite; }
+    @keyframes aura-pulse {
+      0%, 100% { opacity: 0.15; }
+      50% { opacity: 0.4; }
+    }
+
+    #ear-l { transform-origin: 26px 20px; }
+    #ear-r { transform-origin: 74px 20px; }
+    #ear-l.twitch, #ear-r.twitch { animation: twitch 0.5s ease-in-out infinite; }
+    @keyframes twitch {
+      0%, 100% { transform: rotate(0); }
+      25% { transform: rotate(9deg); }
+      75% { transform: rotate(-7deg); }
+    }
+
+    #eyes.dart { animation: dart 0.8s steps(2) infinite; }
+    @keyframes dart {
+      0%, 100% { transform: translateX(0); }
+      30% { transform: translateX(-2px); }
+      60% { transform: translateX(2px); }
+    }
+
+    .heart {
+      position: fixed;
+      font-size: 14px;
+      color: #f472b6;
+      pointer-events: none;
+      z-index: 6;
+      animation: float-up 1s ease-out forwards;
+    }
+    @keyframes float-up {
+      to { transform: translateY(-30px); opacity: 0; }
+    }
+
     #stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -67,8 +133,29 @@
     .stat { text-align: center; }
     .stat .val { font-size: 15px; font-weight: 600; }
     .stat .key { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    #xpwrap {
+      width: 160px;
+      height: 4px;
+      margin-top: 8px;
+      background: rgba(75, 85, 99, 0.5);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #xpbar {
+      height: 100%;
+      width: 0;
+      background: #4ade80;
+      border-radius: 2px;
+      transition: width 0.5s;
+    }
+    #xplabel {
+      margin-top: 3px;
+      font-size: 9px;
+      color: #9ca3af;
+    }
     #fanline {
-      margin-top: 4px;
+      margin-top: 3px;
       font-size: 10px;
       color: #9ca3af;
       min-height: 13px;
@@ -77,16 +164,34 @@
 </head>
 <body>
   <button id="close" title="Quit Pulse">✕</button>
+  <div id="bubble"></div>
 
   <svg id="creature" viewBox="0 0 100 100">
+    <circle id="aura" class="skin" cx="50" cy="52" r="46" fill="#4ade80" style="display: none" />
     <circle id="ring" cx="50" cy="50" r="47" fill="none" stroke="#6b7280"
             stroke-width="2.5" stroke-dasharray="5 9" stroke-linecap="round"
             opacity="0.7" style="display: none" />
-    <ellipse id="body" cx="50" cy="52" rx="40" ry="38" fill="#4ade80" />
+    <ellipse id="ear-l" class="skin" cx="26" cy="18" rx="6" ry="9" fill="#4ade80" />
+    <ellipse id="ear-r" class="skin" cx="74" cy="18" rx="6" ry="9" fill="#4ade80" />
+    <g id="acc-sprout" style="display: none">
+      <path d="M 50 16 C 50 9 47 6 43 4" stroke="#16a34a" stroke-width="2.5" fill="none" stroke-linecap="round" />
+      <ellipse cx="41" cy="4" rx="4.5" ry="2.5" fill="#22c55e" transform="rotate(-25 41 4)" />
+    </g>
+    <g id="acc-horns" style="display: none" fill="#e5e7eb">
+      <path d="M 31 21 L 25 7 L 38 15 Z" />
+      <path d="M 69 21 L 75 7 L 62 15 Z" />
+    </g>
+    <g id="acc-crown" style="display: none">
+      <path d="M 37 15 L 37 4 L 44 10 L 50 1 L 56 10 L 63 4 L 63 15 Z"
+            fill="#fbbf24" stroke="#d97706" stroke-width="1" stroke-linejoin="round" />
+    </g>
+    <ellipse id="body" class="skin" cx="50" cy="52" rx="40" ry="38" fill="#4ade80" />
     <rect id="brow-l" x="30" y="30" width="16" height="3.5" rx="1.75" fill="#111827" />
     <rect id="brow-r" x="54" y="30" width="16" height="3.5" rx="1.75" fill="#111827" />
-    <ellipse id="eye-l" cx="38" cy="44" rx="5" ry="5" fill="#111827" />
-    <ellipse id="eye-r" cx="62" cy="44" rx="5" ry="5" fill="#111827" />
+    <g id="eyes">
+      <ellipse id="eye-l" cx="38" cy="44" rx="5" ry="5" fill="#111827" />
+      <ellipse id="eye-r" cx="62" cy="44" rx="5" ry="5" fill="#111827" />
+    </g>
     <path id="mouth" d="M 35 62 Q 50 74 65 62" stroke="#111827" stroke-width="3.5" stroke-linecap="round" fill="none" />
   </svg>
 
@@ -96,6 +201,8 @@
     <div class="stat"><div class="val" id="stat-load">—</div><div class="key">load</div></div>
     <div class="stat"><div class="val" id="stat-power">—</div><div class="key">pwr</div></div>
   </div>
+  <div id="xpwrap"><div id="xpbar"></div></div>
+  <div id="xplabel"></div>
   <div id="fanline"></div>
 
   <script src="dist/renderer.js"></script>
