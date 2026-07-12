@@ -12,6 +12,7 @@ interface PulseVitals {
 }
 interface PulseApi {
   onVitals: (cb: (v: PulseVitals) => void) => void;
+  onPaused: (cb: (paused: boolean) => void) => void;
   quit: () => void;
 }
 declare const pulse: PulseApi;
@@ -78,9 +79,25 @@ document.getElementById("close")!.addEventListener("click", () => pulse.quit());
 
 // Blink every few seconds; a touch of randomness so it feels alive.
 const eyes = [document.getElementById("eye-l")!, document.getElementById("eye-r")!];
+let isPaused = false;
 function blink(): void {
-  eyes.forEach((e) => e.setAttribute("ry", "0.8"));
-  setTimeout(() => eyes.forEach((e) => e.setAttribute("ry", "5")), 130);
+  if (!isPaused) {
+    eyes.forEach((e) => e.setAttribute("ry", "0.8"));
+    setTimeout(() => eyes.forEach((e) => e.setAttribute("ry", "5")), 130);
+  }
   setTimeout(blink, 2500 + Math.random() * 3000);
 }
 setTimeout(blink, 2000);
+
+// Paused = asleep: eyes shut, flat mouth, animations frozen, stats dimmed.
+pulse.onPaused((paused) => {
+  isPaused = paused;
+  document.body.classList.toggle("paused", paused);
+  eyes.forEach((e) => e.setAttribute("ry", paused ? "0.8" : "5"));
+  if (paused) {
+    document.getElementById("mouth")!.setAttribute("d", MOODS.warm.mouth);
+    document.getElementById("fanline")!.textContent = "zZz — paused";
+  } else {
+    document.getElementById("fanline")!.textContent = "";
+  }
+});

@@ -38,6 +38,8 @@
       50% { transform: scale(1.06); }
     }
     #creature.shake { animation: shake 0.3s linear infinite; }
+    body.paused #creature { animation-play-state: paused; }
+    body.paused #stats { opacity: 0.5; }
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-2px) rotate(-1deg); }

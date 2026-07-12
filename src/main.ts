@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, Tray } from "electron";
 import * as path from "node:path";
 import { readVitals } from "./sensors";
 
@@ -23,10 +23,14 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
+let tray: Tray | null = null; // keep a reference so it isn't garbage-collected
+
 app.whenReady().then(() => {
   const win = createWindow();
+  let paused = false;
 
   const poll = async () => {
+    if (paused) return;
     try {
       const vitals = await readVitals();
       if (!win.isDestroyed()) win.webContents.send("vitals", vitals);
@@ -37,6 +41,25 @@ app.whenReady().then(() => {
   poll();
   const timer = setInterval(poll, POLL_MS);
   win.on("closed", () => clearInterval(timer));
+
+  tray = new Tray(path.join(__dirname, "..", "assets", "tray.png"));
+  tray.setToolTip("Pulse");
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: "Pause",
+        type: "checkbox",
+        checked: false,
+        click: (item) => {
+          paused = item.checked;
+          if (!win.isDestroyed()) win.webContents.send("paused", paused);
+          if (!paused) poll();
+        },
+      },
+      { type: "separator" },
+      { label: "Quit", click: () => app.quit() },
+    ]),
+  );
 
   ipcMain.on("quit", () => app.quit());
 });

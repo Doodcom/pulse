@@ -19,7 +19,8 @@ npm install
 npm start
 ```
 
-Drag the creature anywhere; hover and hit ✕ to quit.
+Drag the creature anywhere; hover and hit ✕ to quit. The tray icon has
+Pause (puts the creature to sleep) and Quit.
 
 ## Layout
 
@@ -31,7 +32,6 @@ Drag the creature anywhere; hover and hit ✕ to quit.
 
 ## Ideas for later
 
-- Tray icon with pause/quit
 - Fan RPM ring around the creature
 - Sounds when it goes critical (it should complain)
 - Click-through mode (`setIgnoreMouseEvents`)
