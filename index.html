@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'" />
+  <title>Pulse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { background: transparent; overflow: hidden; }
+    body {
+      font-family: system-ui, sans-serif;
+      color: #e5e7eb;
+      -webkit-app-region: drag;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px;
+    }
+    #close {
+      -webkit-app-region: no-drag;
+      position: fixed;
+      top: 6px; right: 10px;
+      background: none; border: none;
+      color: #9ca3af; font-size: 14px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    body:hover #close { opacity: 1; }
+    #creature {
+      width: 150px; height: 150px;
+      --breath: 4s;
+      animation: breathe var(--breath) ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    #creature.shake { animation: shake 0.3s linear infinite; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-2px) rotate(-1deg); }
+      75% { transform: translateX(2px) rotate(1deg); }
+    }
+    #body { transition: fill 1s; }
+    #mouth { transition: d 0.5s; }
+    #stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      background: rgba(17, 24, 39, 0.85);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+    .stat { text-align: center; }
+    .stat .val { font-size: 15px; font-weight: 600; }
+    .stat .key { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+    #fanline {
+      margin-top: 4px;
+      font-size: 10px;
+      color: #9ca3af;
+      min-height: 13px;
+    }
+  </style>
+</head>
+<body>
+  <button id="close" title="Quit Pulse">✕</button>
+
+  <svg id="creature" viewBox="0 0 100 100">
+    <ellipse id="body" cx="50" cy="52" rx="40" ry="38" fill="#4ade80" />
+    <rect id="brow-l" x="30" y="30" width="16" height="3.5" rx="1.75" fill="#111827" />
+    <rect id="brow-r" x="54" y="30" width="16" height="3.5" rx="1.75" fill="#111827" />
+    <ellipse id="eye-l" cx="38" cy="44" rx="5" ry="5" fill="#111827" />
+    <ellipse id="eye-r" cx="62" cy="44" rx="5" ry="5" fill="#111827" />
+    <path id="mouth" d="M 35 62 Q 50 74 65 62" stroke="#111827" stroke-width="3.5" stroke-linecap="round" fill="none" />
+  </svg>
+
+  <div id="stats">
+    <div class="stat"><div class="val" id="stat-cpu">—</div><div class="key">cpu</div></div>
+    <div class="stat"><div class="val" id="stat-gpu">—</div><div class="key">gpu</div></div>
+    <div class="stat"><div class="val" id="stat-load">—</div><div class="key">load</div></div>
+    <div class="stat"><div class="val" id="stat-power">—</div><div class="key">pwr</div></div>
+  </div>
+  <div id="fanline"></div>
+
+  <script src="dist/renderer.js"></script>
+</body>
+</html>
